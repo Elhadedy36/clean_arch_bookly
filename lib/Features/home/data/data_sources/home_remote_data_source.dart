@@ -1,4 +1,6 @@
+import 'package:bookly/Features/home/data/models/books_model/books_model.dart';
 import 'package:bookly/Features/home/domain/entities/book_entity.dart';
+import 'package:bookly/core/utils/api_service.dart';
 
 abstract class  HomeRemoteDataSource 
 {
@@ -10,10 +12,25 @@ abstract class  HomeRemoteDataSource
 
 class HomeRemoteDataSourceImpl extends HomeRemoteDataSource 
 {
+  final ApiService apiService; 
+
+  HomeRemoteDataSourceImpl({required this.apiService});
+  
+  
   @override
-  Future<List<BookEntity>> fetchBestSellerBooks() {
-    // TODO: implement fetchBestSellerBooks
-    throw UnimplementedError();
+  Future<List<BookEntity>> fetchBestSellerBooks()async {
+  var data = await apiService.get(endPoint: 'volumes?Filtering=free-ebooks&q=programming');//data is the whole json of the req
+  List<BookEntity> books = getBookList(data);
+  return books;
+  }
+
+  List<BookEntity> getBookList(Map<String, dynamic> data) {//keep single responsibility principle
+     List<BookEntity> books = [];
+    
+    for(var item in data['items']){
+      books.add(BooksModel.fromJson(item));//i used the model not entity cuz i already send the entitiy data on it in super constructor and the extend i did make the model is the same as entity
+    }
+    return books;
   }
 
   @override
