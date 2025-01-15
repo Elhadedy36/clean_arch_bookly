@@ -4,48 +4,52 @@ import 'package:bookly/Features/home/domain/entities/book_entity.dart';
 import 'package:bookly/Features/home/domain/repos/home_repo.dart';
 import 'package:bookly/core/Errors/failure.dart';
 import 'package:dartz/dartz.dart';
+import 'package:dio/dio.dart';
 
-class HomeRepoImpl extends HomeRepo  {
+class HomeRepoImpl extends HomeRepo {
   final HomeRemoteDataSource homeRemoteDataSource;
   final HomeLocalDataSource homeLocalDataSource;
 
-  HomeRepoImpl({required this.homeRemoteDataSource,required this.homeLocalDataSource});
+  HomeRepoImpl(
+      {required this.homeRemoteDataSource, required this.homeLocalDataSource});
 
   @override
-  Future<Either<Failure, List<BookEntity>>> fetchFeaturedBooks()async {
+  Future<Either<Failure, List<BookEntity>>> fetchFeaturedBooks() async {
     try {
-      var bookslist = await homeLocalDataSource.fetchFeaturedBooks();
-      if (bookslist.isNotEmpty) {
+      List<BookEntity> books;
 
-        return right(bookslist);
+      books = await homeLocalDataSource.fetchFeaturedBooks();
+      if (books.isNotEmpty) {
+        return right(books);
+      }
 
-        }
-
-  var books = await homeRemoteDataSource.fetchFeaturedBooks();
-  return right(books);
-} on Exception catch (e) {
-
-return left(Failure());
-
-}
+      books = await homeRemoteDataSource.fetchFeaturedBooks();
+      return right(books);
+    } on Exception catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(message: e.toString()));
+    }
   }
-  
+
   @override
-  Future<Either<Failure, List<BookEntity>>> fetchBestSellerBooks()async {
-  try {
-      var bookslist = await homeLocalDataSource.fetchBestSellerBooks();
-      if (bookslist.isNotEmpty) {
+  Future<Either<Failure, List<BookEntity>>> fetchBestSellerBooks() async {
+    try {
+      List<BookEntity> books;
 
-        return right(bookslist);
-        
-        }
+      books = await homeLocalDataSource.fetchBestSellerBooks();
+      if (books.isNotEmpty) {
+        return right(books);
+      }
 
-  var books = await homeRemoteDataSource.fetchBestSellerBooks();
-  return right(books);
-} on Exception catch (e) {
-
-return left(Failure());
-
-}
+      books = await homeRemoteDataSource.fetchBestSellerBooks();
+      return right(books);
+    } on Exception catch (e) {
+      if (e is DioException) {
+        return Left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(message: e.toString()));
+    }
   }
 }

@@ -9,8 +9,7 @@ class BookEntity {
   @HiveField(1)
   final String title;
   @HiveField(2)
-  final String authorName;
-  @HiveField(3)
+  final String authorName; 
   final int pageCount;
   @HiveField(4)
   final String publishedDate;
