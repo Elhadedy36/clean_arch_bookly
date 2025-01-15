@@ -1,54 +1,43 @@
-import 'package:bookly/Features/home/data/models/books_model/books_model.dart';
-import 'package:bookly/Features/home/domain/entities/book_entity.dart';
+import 'package:bookly/Features/home/data/models/book_model/book_model.dart';
 import 'package:bookly/constants.dart';
 import 'package:bookly/core/utils/api_service.dart';
-import 'package:bookly/core/utils/function/save_books.dart';
-import 'package:hive/hive.dart';
+import 'package:bookly/core/utils/functions/save_books.dart';
 
-abstract class  HomeRemoteDataSource 
-{
-  
-  Future< List<BookEntity>> fetchFeaturedBooks();
-  Future< List<BookEntity>> fetchBestSellerBooks();
+import '../../domain/entities/book_entity.dart';
 
+abstract class HomeRemoteDataSource {
+  Future<List<BookEntity>> fetchFeaturedBooks({int pageNumber = 0});
+  Future<List<BookEntity>> fetchNewestBooks();
 }
 
-class HomeRemoteDataSourceImpl extends HomeRemoteDataSource 
-{
-  final ApiService apiService; 
+class HomeRemoteDataSourceImpl extends HomeRemoteDataSource {
+  final ApiService apiService;
 
-  HomeRemoteDataSourceImpl({required this.apiService});
-  
+  HomeRemoteDataSourceImpl(this.apiService);
   @override
-  Future<List<BookEntity>> fetchFeaturedBooks() async{
-   
-  var data = await apiService.get(endPoint: 'volumes?Filtering=free-ebooks&q=programming');//data is the whole json of the req
-  List<BookEntity> books = getBookList(data);
-  saveBooksData(books,kFeaturedBox);
-  return books;
+  Future<List<BookEntity>> fetchFeaturedBooks({int pageNumber = 0}) async {
+    var data = await apiService.get(
+        endPoint:
+            'volumes?Filtering=free-ebooks&q=programming&startIndex=${pageNumber * 10}');
+    List<BookEntity> books = getBooksList(data);
+    saveBooksData(books, kFeaturedBox);
+    return books;
   }
-  
 
-  
-  
   @override
-  Future<List<BookEntity>> fetchBestSellerBooks()async {
-    var data = await apiService.get(endPoint: 'volumes?Filtering=free-ebooks&Sorting=newest &q=programming');//data is the whole json of the req
-  List<BookEntity> books = getBookList(data);
-  saveBooksData(books, kNewesrBox);
-  return books;
+  Future<List<BookEntity>> fetchNewestBooks() async {
+    var data = await apiService.get(
+        endPoint: 'volumes?Filtering=free-ebooks&Sorting=newest&q=programming');
+    List<BookEntity> books = getBooksList(data);
+    saveBooksData(books, kNewestBox);
+    return books;
   }
-  
 
-
-  
-  List<BookEntity> getBookList(Map<String, dynamic> data) {//keep single responsibility principle
-     List<BookEntity> books = [];
-    
-    for(var item in data['items']){
-      books.add(BooksModel.fromJson(item));//i used the model not entity cuz i already send the entitiy data on it in super constructor and the extend i did make the model is the same as entity
+  List<BookEntity> getBooksList(Map<String, dynamic> data) {
+    List<BookEntity> books = [];
+    for (var bookMap in data['items']) {
+      books.add(BookModel.fromJson(bookMap));
     }
     return books;
   }
-  
 }

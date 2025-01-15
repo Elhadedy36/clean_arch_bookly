@@ -1,75 +1,46 @@
-import 'dart:math';
-
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 
 abstract class Failure {
   final String message;
 
-  Failure({required this.message});
+  Failure(this.message);
 }
 
 class ServerFailure extends Failure {
-  ServerFailure({required super.message});
+  ServerFailure(super.message);
 
-  factory ServerFailure.fromDioError(DioException dioError) {
-    switch (dioError.type) {
-      case DioExceptionType.connectionTimeout:
-        return ServerFailure(
-          message: 'Connection timeout with ApiServer',
-        );
+  factory ServerFailure.fromDiorError(DioError e) {
+    switch (e.type) {
+      case DioErrorType.connectionTimeout:
+        return ServerFailure('Connection timeout with api server');
 
-      case DioExceptionType.sendTimeout:
-        return ServerFailure(
-          message: 'Send timeout with ApiServer',
-        );
-
-      case DioExceptionType.receiveTimeout:
-        return ServerFailure(
-          message: 'Receive timeout with ApiServer',
-        );
-
-      case DioExceptionType.badCertificate:
-        return ServerFailure(
-          message: 'Bad certificate with ApiServer',
-        );
-
-      case DioExceptionType.badResponse:
-
-        return  ServerFailure.fromResponse(dioError.response!.statusCode!, dioError.response!);
-        
-        
-
-      case DioExceptionType.cancel:
-        return ServerFailure(
-          message: 'Request cancelled with ApiServer',
-        );
-
-      case DioExceptionType.connectionError:
-        return ServerFailure(
-          message: 'Connection error with ApiServer',
-        );
-
-      case DioExceptionType.unknown:
-        return ServerFailure(
-          message: 'Unknown error with ApiServer',
-        );
+      case DioErrorType.sendTimeout:
+        return ServerFailure('Send timeout with ApiServer');
+      case DioErrorType.receiveTimeout:
+        return ServerFailure('Receive timeout with ApiServer');
+      case DioErrorType.badCertificate:
+        return ServerFailure('badCertificate with api server');
+      case DioErrorType.badResponse:
+        return ServerFailure.fromResponse(
+            e.response!.statusCode!, e.response!.data);
+      case DioErrorType.cancel:
+        return ServerFailure('Request to ApiServer was canceld');
+      case DioErrorType.connectionError:
+        return ServerFailure('No Internet Connection');
+      case DioErrorType.unknown:
+        return ServerFailure('Opps There was an Error, Please try again');
     }
   }
-  factory ServerFailure.fromResponse(int statusCode,dynamic response) 
-  {
-    if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
-      return ServerFailure(message: response['error']['message']);
-    } else if (statusCode == 404) {
-      return ServerFailure(message: 'Not Found');
+
+  factory ServerFailure.fromResponse(int statusCode, dynamic response) {
+    if (statusCode == 404) {
+      return ServerFailure('Your request was not found, please try later');
     } else if (statusCode == 500) {
-      return ServerFailure(message: 'Internal Server Error');
-    } else if (statusCode == 502) {
-      return ServerFailure(message: 'Bad Gateway');
-    } else if (statusCode == 503) {
-      return ServerFailure(message: 'Service Unavailable');
-    } else { 
-      return ServerFailure(message: 'Opps there was an error');
+      return ServerFailure('There is a problem with server, please try later');
+    } else if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
+      return ServerFailure(response['error']['message']);
+    } else {
+      return ServerFailure('There was an error , please try again');
     }
   }
 }
